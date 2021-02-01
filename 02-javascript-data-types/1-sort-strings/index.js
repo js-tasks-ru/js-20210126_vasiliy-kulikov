@@ -5,7 +5,7 @@
  * @returns {string[]}
  */
 export function sortStrings(arr, param = 'asc') {
-    let arrCopy = arr.slice();
+    let arrCopy = [...arr];
 
     if (param === 'asc') { 
         arrCopy.sort((a, b) => {

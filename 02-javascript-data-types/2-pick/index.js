@@ -5,14 +5,12 @@
  * @returns {object} - returns the new object
  */
 export const pick = (obj, ...fields) => {
-    const arrKeysValues = Object.entries(obj);
+    const arrFields = [...fields];
     const resultObj = {};
     
-    for (let item of fields) { 
-        arrKeysValues.forEach(element => {
-            if (element[0] === item) resultObj[item] = element[1];
-        });
-    }; 
+    for (let key in obj) { 
+        if (arrFields.includes(key)) resultObj[key] = obj[key];  
+    }
 
     return resultObj;
 };
