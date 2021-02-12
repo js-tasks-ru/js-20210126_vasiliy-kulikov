@@ -4,25 +4,32 @@ export default class SortableTable {
         this.data = data;
         this.render();
     }
+    tableHeader() { 
+        return `
+            <div data-element="header" class="sortable-table__header sortable-table__row">
+                ${this.makeHeader().join('')}
+            </div>
+        `
+    }
+
+    tableBody() { 
+        return `
+            <div data-element="body" class="sortable-table__body">
+                ${this.makeBody().join('')}
+            </div>  
+        ` 
+    }
 
     template() { 
         return `
             <div class="sortable-table">
-                <div data-element="header" class="sortable-table__header sortable-table__row">
-                    ${this.makeHeader().join('')}
-                </div>
-                <div data-element="body" class="sortable-table__body">
-                    ${this.makeBody().join('')}
-                </div>                    
+                ${this.tableHeader()}
+                ${this.tableBody()}                  
             </div>
         `;
     }
 
     makeHeader() { 
-        
-        //const selectField = document.querySelector('#field');
-        //const selectedFieldValue = selectField.querySelector('option[selected]').value;
-
         const arrayHeaderElements = this.header.map(item => { 
             let arrows = `
                 <span data-element="arrow" class="sortable-table__sort-arrow">
@@ -30,10 +37,8 @@ export default class SortableTable {
                 </span>
             `;
 
-            //if (item.id !== selectedFieldValue) arrows = ``;
-
             return `
-                <div class="sortable-table__cell" data-id="${item.id}" data-sortable="${item.sortable}" data-order="asc">
+                <div class="sortable-table__cell" data-id="${item.id}" data-sortable="${item.sortable}" data-order="">
                         <span>${item.title}</span> 
                         ${arrows}      
                 </div>
@@ -49,6 +54,7 @@ export default class SortableTable {
         table.dataset.element = 'productsContainer';
         table.innerHTML = this.template();
 
+        
         this.element = table;
     }
 
@@ -91,6 +97,12 @@ export default class SortableTable {
 
     sort(fieldValue, orderValue) { 
         const tableBody = document.body.querySelector('.sortable-table__body');
+        
+        this.subElements = {};
+        this.subElements.header = document.querySelector('.sortable-table').firstElementChild;
+        this.subElements.body = document.querySelector('.sortable-table').lastElementChild;;
+
+
         let order; 
 
         switch (orderValue) { 
@@ -102,15 +114,29 @@ export default class SortableTable {
                 break;
         }
 
-        if (fieldValue === "title") {
+        let typeSort;
+
+        this.header.forEach((item) => { 
+            if (item.id === fieldValue) typeSort = item.sortType; 
+        }); 
+
+        if (typeSort === 'string') {
             this.data.sort((a, b) => {
                 return order * a.title.localeCompare(b.title, ['ru', 'en'], { caseFirst: 'upper' });
             });
-        } else { 
+        }
+        
+        if (typeSort === 'number') { 
             this.data.sort((a, b) => order * (a[fieldValue] - b[fieldValue]));
         }  
 
         tableBody.innerHTML = this.makeBody().join('');
+        
+        const headerChilds = document.body.querySelector('.sortable-table__header').children;
+
+        for (let child of headerChilds) {
+            child.dataset.id === fieldValue ? child.dataset.order = orderValue : child.dataset.order = ''; 
+        }
     }
 
     destroy() { 
