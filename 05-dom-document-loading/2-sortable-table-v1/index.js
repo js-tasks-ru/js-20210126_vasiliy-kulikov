@@ -1,5 +1,3 @@
-import { sortStrings } from '../../02-javascript-data-types/1-sort-strings/index.js';
-
 export default class SortableTable {
     constructor(header, { data } = {}) { 
         this.header = header;
@@ -22,8 +20,8 @@ export default class SortableTable {
 
     makeHeader() { 
         
-        const selectField = document.querySelector('#field');
-        const selectedFieldValue = selectField.querySelector('option[selected]').value;
+        //const selectField = document.querySelector('#field');
+        //const selectedFieldValue = selectField.querySelector('option[selected]').value;
 
         const arrayHeaderElements = this.header.map(item => { 
             let arrows = `
@@ -32,7 +30,7 @@ export default class SortableTable {
                 </span>
             `;
 
-            if (item.id !== selectedFieldValue) arrows = ``;
+            //if (item.id !== selectedFieldValue) arrows = ``;
 
             return `
                 <div class="sortable-table__cell" data-id="${item.id}" data-sortable="${item.sortable}" data-order="asc">
@@ -50,38 +48,73 @@ export default class SortableTable {
         table.className = 'products-list__container';
         table.dataset.element = 'productsContainer';
         table.innerHTML = this.template();
-        //console.log(table.innerHTML)
 
         this.element = table;
     }
 
     makeBody() { 
-        const arrayCells = this.data.map(item => {
-            return `
+
+        const arrIdCells = [];
+
+        for (let item of this.header) arrIdCells.push(item.id);
+
+        const arrRows = this.data.map(item => {
+            const arrCells = [];
+            let cell;
+
+            arrIdCells.forEach((elem) => {
+                if (elem === 'images') {
+                    cell = `
+                        <div class="sortable-table__cell">
+                            <img class="sortable-table-image" alt="Image" src="${item.images[0].url}">
+                        </div>
+                    `;
+                } else { 
+                    cell = `
+                        <div class="sortable-table__cell">${item[elem]}</div>
+                    `;
+                }
+                arrCells.push(cell);
+            });
+            
+            const row = `
                 <a href="/products/${item.id}" class="sortable-table__row">
-                    <div class="sortable-table__cell">
-                        <img class="sortable-table-image" alt="Image" src="${item.images[0].url}">
-                    </div>
-                    <div class="sortable-table__cell">${item.title}</div>
-                    <div class="sortable-table__cell">${item.quantity}</div>
-                    <div class="sortable-table__cell">${item.price}</div>
-                    <div class="sortable-table__cell">${item.sales}</div>
+                    ${arrCells.join('')}
                 </a>
-            `
+            `;
+
+            return row;
         });
 
-        return arrayCells;  
+        return arrRows;  
     }
 
     sort(fieldValue, orderValue) { 
+        const tableBody = document.body.querySelector('.sortable-table__body');
+        let order; 
 
-        this.data.sort((a, b) => a[fieldValue] - b[fieldValue]);
+        switch (orderValue) { 
+            case 'asc':
+                order = 1;
+                break;
+            case 'desc':
+                order = -1;
+                break;
+        }
+
+        if (fieldValue === "title") {
+            this.data.sort((a, b) => {
+                return order * a.title.localeCompare(b.title, ['ru', 'en'], { caseFirst: 'upper' });
+            });
+        } else { 
+            this.data.sort((a, b) => order * (a[fieldValue] - b[fieldValue]));
+        }  
+
+        tableBody.innerHTML = this.makeBody().join('');
+    }
+
+    destroy() { 
         this.element.remove();
-        console.log(this.data);
-        this.render();
-
-        //const arr = this.data
-        //sortStrings(fieldValue, orderValue)
     }
 }
 
