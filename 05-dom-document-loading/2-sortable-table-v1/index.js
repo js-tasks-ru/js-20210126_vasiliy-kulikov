@@ -97,11 +97,6 @@ export default class SortableTable {
 
     sort(fieldValue, orderValue) { 
         const tableBody = document.body.querySelector('.sortable-table__body');
-        
-        this.subElements = {};
-        this.subElements.header = document.querySelector('.sortable-table').firstElementChild;
-        this.subElements.body = document.querySelector('.sortable-table').lastElementChild;;
-
 
         let order; 
 
