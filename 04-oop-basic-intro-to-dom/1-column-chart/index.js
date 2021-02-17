@@ -40,11 +40,9 @@ export default class ColumnChart {
     }
 
     makeDataRightValue() { 
-        let coefValues, newChartData;
-        let maxValue = Math.max(...this.data);
-
-        coefValues = this.chartHeight / maxValue;
-        newChartData = this.data.map(item => item * coefValues);
+        const maxValue = Math.max(...this.data);
+        const coefValues = this.chartHeight / maxValue;
+        const newChartData = this.data.map(item => item * coefValues);
 
         return newChartData;
     }
