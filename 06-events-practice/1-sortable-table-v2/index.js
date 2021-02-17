@@ -14,27 +14,7 @@ export default class SortableTable {
         this.element = table;
 
         this.subElements = this.getSubElements(table.firstElementChild);
-
-        this.subElements['header'].addEventListener('click', evt => {
-            const parent = evt.target.closest('.sortable-table__cell');
-            const column = parent.dataset.id;
-            
-            let sortingOrder;
-
-            switch (parent.dataset.order) { 
-                case 'asc':
-                    sortingOrder = 'desc';
-                    break;
-                case 'desc':
-                    sortingOrder = 'asc';
-                    break;
-                default:
-                    sortingOrder = 'asc';
-                    break;
-            }
-
-            this.sort(column, sortingOrder);
-        });
+        this.subElements['header'].addEventListener('pointerdown', evt => this.sortByClick(evt));
     }
 
     getTable() {     
@@ -126,7 +106,7 @@ export default class SortableTable {
 
         currentColumn.dataset.order = order;
 
-        this.subElements.body.innerHTML = this.getTemplateBodyRows(sortedData);
+        this.subElements.body.innerHTML = this.getTemplateBodyRows(sortedData).join('');
     }
 
     sortData(field, order) { 
@@ -147,6 +127,29 @@ export default class SortableTable {
                     return direction * (a[field] - b[field]);
             }
         });
+    }
+
+    sortByClick(evt) {
+        const parent = evt.target.closest('.sortable-table__cell');
+        const column = parent.dataset.id;
+        
+        if ( this.header.find(item => item.id === column).sortable === false ) return;
+        
+        let sortingOrder;
+
+        switch (parent.dataset.order) { 
+            case 'asc':
+                sortingOrder = 'desc';
+                break;
+            case 'desc':
+                sortingOrder = 'asc';
+                break;
+            default:
+                sortingOrder = 'desc';
+                break;
+        }
+
+        this.sort(column, sortingOrder);
     }
 
     destroy() { 
