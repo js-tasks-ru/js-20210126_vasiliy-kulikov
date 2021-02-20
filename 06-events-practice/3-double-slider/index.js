@@ -4,7 +4,8 @@ export default class DoubleSlider {
         this.max = sliderConfig.max;
         this.formatValue = sliderConfig.formatValue;
         this.selected = sliderConfig.selected;
-
+        this.from = sliderConfig.selected.from;
+        this.to = sliderConfig.selected.to;
         this.sliderConfig = sliderConfig;
 
         this.render();
@@ -13,56 +14,51 @@ export default class DoubleSlider {
     render() { 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = this.getTemplate();
-
         this.element = wrapper.firstElementChild;
-
         wrapper.remove();
 
         this.initialization();
     }
 
     getTemplate() { 
-        let valueMin, valueMax;
-
-        if (this.sliderConfig.min) valueMin = this.sliderConfig.min;
-
-        if (this.sliderConfig.max) valueMax = this.sliderConfig.max;
-
         return `
             <div class="range-slider">
-                <span data-element='from'>${this.sliderConfig.formatValue(valueMin)}</span>
+                <span data-element='from'>${this.formatValue(this.min)}</span>
                     <div class="range-slider__inner">
                         <span class="range-slider__progress"></span>
                         <span class="range-slider__thumb-left"></span>
                         <span class="range-slider__thumb-right"></span>
                     </div>
-                <span data-element='to'>${this.sliderConfig.formatValue(valueMax)}</span>
+                <span data-element='to'>$${this.formatValue(this.max)}</span>
             </div>
         `
     }
 
     initialization() { 
         this.leftThumb = this.element.querySelector('.range-slider__thumb-left');
-        this.leftBoundry = this.element.querySelector('span[data-element = "from"]')
+        this.leftBoundry = this.element.querySelector('span[data-element="from"]')
 
         this.rightThumb = this.element.querySelector('.range-slider__thumb-right');
-        this.rightBoundry = this.element.querySelector('span[data-element = "to"]');
+        this.rightBoundry = this.element.querySelector('span[data-element="to"]');
 
         this.sliderLine = this.element.querySelector('.range-slider__inner');
         this.progressLine = this.element.querySelector('.range-slider__progress');
 
-        this.sliderScaleRange = this.max - this.min;
+        this.scaleRange = this.sliderConfig.max - this.sliderConfig.min;
 
         if (this.sliderConfig.selected) { 
-            this.leftBoundry.textContent = this.formatValue(this.sliderConfig.selected.from);
-            this.rightBoundry.textContent = this.formatValue(this.sliderConfig.selected.to);
 
-            this.progressLine.style.left = (this.sliderConfig.selected.from - this.min) / this.sliderScaleRange * 100 + '%';
+            this.leftBoundry.textContent = this.formatValue(this.from);
+            this.rightBoundry.textContent = this.formatValue(this.to);
+
+            this.progressLine.style.left = (this.from - this.min) / this.scaleRange * 100 + '%';
             this.leftThumb.style.left = this.progressLine.style.left;
+
+            this.progressLine.style.right = (this.max - this.to) / this.scaleRange * 100 + '%';
+            this.rightThumb.style.right = this.progressLine.style.right;
         }
 
         this.element.addEventListener('pointerdown', this.pointerDown);
-
     }
 
     pointerDown = (evt) => {
@@ -70,6 +66,8 @@ export default class DoubleSlider {
         if (evt.target !== this.leftThumb && evt.target !== this.rightThumb) return;
 
         this.sliderLine.width = this.sliderLine.getBoundingClientRect().width;
+        this.sliderLine.leftX = this.sliderLine.getBoundingClientRect().left;
+        this.sliderLine.rightX = this.sliderLine.getBoundingClientRect().right;
         
         (evt.target === this.leftThumb) ? this.activeThumb = this.leftThumb : this.activeThumb = this.rightThumb;
 
@@ -79,6 +77,7 @@ export default class DoubleSlider {
 
                 if (!this.leftThumb.positionStart) { 
                     this.leftThumb.positionStart = this.leftThumb.getBoundingClientRect().left;
+                    this.leftThumb.shiftX = evt.clientX - this.leftThumb.positionStart;
                 };     
 
                 this.leftThumb.ondragstart = () => false;
@@ -89,6 +88,7 @@ export default class DoubleSlider {
             case this.rightThumb:
                 if (!this.rightThumb.positionStart) { 
                     this.rightThumb.positionStart = this.rightThumb.getBoundingClientRect().right;
+                    this.rightThumb.shiftX = evt.clientX - this.rightThumb.positionStart;
                 };
 
                 this.rightThumb.ondragstart = () => false;
@@ -102,62 +102,82 @@ export default class DoubleSlider {
 
     moveLeftThumb = (evt) => {  
 
-        if ((evt.clientX <= this.leftThumb.positionStart) && (this.leftThumb.positionStart < this.sliderLine.getBoundingClientRect().left)) {
-            this.leftThumb.style.cssText = `z-index: 10000; left: 0%`;
+        this.leftThumb.style.cssText = 'z-index: 10000';
+
+        if (evt.clientX <= this.sliderLine.leftX) {
+            this.leftThumb.style.left = `0%`;
             this.leftBoundry.textContent = this.formatValue(this.min);
         } else { 
-            this.leftThumb.style.cssText = `
-                z-index: 10000;
-                left: ${(evt.clientX - this.leftThumb.positionStart) / this.sliderLine.width * 100}%
-            `;
+            this.leftThumb.style.left = (evt.clientX + this.leftThumb.shiftX - this.sliderLine.leftX) / this.sliderLine.width * 100 + '%';
             
-            this.leftBoundry.textContent = this.formatValue(Math.round(this.min + this.sliderScaleRange * (evt.clientX - this.leftThumb.positionStart) / this.sliderLine.width));
+            this.leftBoundry.textContent = this.formatValue(
+                Math.round(
+                    this.min + this.scaleRange * (evt.clientX - this.sliderLine.leftX) / this.sliderLine.width
+                )
+            );
         }
 
         if (this.leftThumb.getBoundingClientRect().right >= this.rightThumb.getBoundingClientRect().left) { 
-            this.leftThumb.style.cssText = `
-                z-index: 10000;
-                left: ${100 - parseFloat(this.rightThumb.style.right)}%;
-            `;
+            this.leftThumb.style.left = 100 - parseFloat(this.rightThumb.style.right) + '%';
+
+            this.leftBoundry.textContent = this.formatValue(
+                Math.round(
+                    parseFloat(this.leftThumb.style.left) / 100 * this.scaleRange + this.min
+                )
+            );
         }
 
         this.progressLine.style.left = `${parseFloat(this.leftThumb.style.left)}%`;
 
-        document.addEventListener('pointerup', this.pointerLeftUp);
+        document.addEventListener('pointerup', this.pointerUp);
     }
 
     moveRightThumb = (evt) => { 
+        this.rightThumb.cssText = 'z-index: 10000';
 
-        if (evt.clientX > this.rightThumb.positionStart) {
-            this.rightThumb.style.cssText = `z-index: 10000; right: 0%`;
+        if (evt.clientX >= this.sliderLine.rightX) {
+            this.rightThumb.style.right = '0%';
+            this.rightBoundry.textContent = this.formatValue(this.max);
         } else { 
-            this.rightThumb.style.cssText = `
-                z-index: 10000;
-                right: ${(this.rightThumb.positionStart - evt.clientX) / this.sliderLine.width * 100}%
-            `;
+            this.rightThumb.style.right = (this.sliderLine.rightX - this.rightThumb.shiftX - evt.clientX) / this.sliderLine.width * 100 + `%`;
+
+            this.rightBoundry.textContent = this.formatValue(
+                Math.round(
+                    this.max + this.scaleRange * (evt.clientX - this.sliderLine.rightX) / this.sliderLine.width
+                )
+            );
         }
         
         if (this.leftThumb.getBoundingClientRect().right >= this.rightThumb.getBoundingClientRect().left) { 
 
-            this.rightThumb.style.cssText = `
-                z-index: 10000;
-                right: ${100 - parseFloat(this.leftThumb.style.left)}%;
-            `;  
+            this.rightThumb.style.right = 100 - parseFloat(this.leftThumb.style.left) +`%`;
+
+            this.rightBoundry.textContent = this.formatValue(
+                Math.round(
+                    this.max - parseFloat(this.rightThumb.style.right) / 100 * this.scaleRange
+                )
+            );
         }
         
         this.progressLine.style.right = `${parseFloat(this.rightThumb.style.right)}%`;
 
-        document.addEventListener('pointerup', this.pointerRightUp);
+        document.addEventListener('pointerup', this.pointerUp);
     }
 
-    pointerLeftUp = () => { 
+    pointerUp = () => { 
+        let evtRangeSelect = new CustomEvent('range-select', {
+            bubles: true,
+            /*detail: {
+                from: ,
+                to: 
+            }*/
+        });
+
+        this.element.dispatchEvent(evtRangeSelect);
+
         document.removeEventListener('pointermove', this.moveLeftThumb);
-        document.removeEventListener('pointerup', this.pointerLeftUp);
-    }
-
-    pointerRightUp = () => { 
         document.removeEventListener('pointermove', this.moveRightThumb);
-        document.removeEventListener('pointerup', this.pointerRightUp);
+        document.removeEventListener('pointerup', this.pointerUp);
     }
 
     destroy() { 
