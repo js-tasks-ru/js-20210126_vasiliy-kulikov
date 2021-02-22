@@ -1,5 +1,5 @@
 export default class NotificationMessage {
-    static quantityElemsOnPage = 0;
+    static prevElem;
 
     constructor(message, { duration, type } = {}) { 
         this.message = message;
@@ -27,14 +27,14 @@ export default class NotificationMessage {
 
     show(targetRenderElement = document.body) { 
 
-        if (NotificationMessage.quantityElemsOnPage !== 0) return;
+        if (NotificationMessage.prevElem) return;
         
         targetRenderElement.append(this.element);
-        NotificationMessage.quantityElemsOnPage++;
+        NotificationMessage.prevElem = this.element;
 
         setTimeout(() => {
             this.remove();
-            NotificationMessage.quantityElemsOnPage--;
+            NotificationMessage.prevElem = null;
         }, this.duration);
     }
 
