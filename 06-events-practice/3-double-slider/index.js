@@ -71,9 +71,11 @@ export default class DoubleSlider {
     };
 
     initSliderLine() { 
-        this.sliderLine.width = this.sliderLine.getBoundingClientRect().width;
-        this.sliderLine.leftX = this.sliderLine.getBoundingClientRect().left;
-        this.sliderLine.rightX = this.sliderLine.getBoundingClientRect().right;
+        let { width, left, right } = this.sliderLine.getBoundingClientRect();
+
+        this.sliderLine.width = width;
+        this.sliderLine.leftX = left;
+        this.sliderLine.rightX = right;
     }
 
     initThumb(evt) {
@@ -159,7 +161,7 @@ export default class DoubleSlider {
     
     pointerUp = () => { 
 
-        let evtRangeSelect = new CustomEvent('range-select', {
+        const evtRangeSelect = new CustomEvent('range-select', {
             bubles: true,
             detail: {
                 from: this.from,

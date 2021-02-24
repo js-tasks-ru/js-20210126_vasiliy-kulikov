@@ -18,13 +18,19 @@ class Tooltip {
         this.element.textContent = tooltipType;
 
         document.body.append(this.element);
+        document.body.addEventListener('pointermove', this.move);
         document.body.addEventListener('pointerout', this.hide);
+    }
+
+    move = (evt) => { 
+        this.element.style.cssText = `left: ${evt.clientX + 10}px; top: ${evt.clientY + 10}px`;
     }
 
     hide = (evt) => { 
         if (!evt.target.dataset.tooltip) return;
         this.element.remove();
         document.body.removeEventListener('pointerout', this.hide);
+        document.body.removeEventListener('pointermove', this.move);
     }
 
     destroy() { 

@@ -66,7 +66,7 @@ export default class SortableTable {
     getTemplateBodyRowCells(item) {
         const arrayCells = [];
 
-        for (let cell of this.header) {
+        for (const cell of this.header) {
             if (cell.template) {
                 arrayCells.push(cell.template(item[cell.id]));
             } else {
