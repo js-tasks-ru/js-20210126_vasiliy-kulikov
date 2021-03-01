@@ -5,7 +5,7 @@ const IMGUR_CLIENT_ID = '28aaa2e823b03b1';
 const BACKEND_URL = 'https://course-js.javascript.ru';
 
 export default class ProductForm {
-  constructor (productId) {
+  constructor(productId) {
     this.productId = productId;
   }
 
@@ -21,13 +21,14 @@ export default class ProductForm {
       return accum;
     }, {});
 
-    console.log(this.subElements);
+    this.subElements.images = this.element.querySelector('div[data-element="imageListContainer"]').firstElementChild;
 
     await this.loadCategoriesData();
     await this.loadProductData();
+    this.initEventListeners();
   }
 
-  async loadCategoriesData() { 
+  async loadCategoriesData() {
     this.urlCategories = new URL('api/rest/categories', BACKEND_URL);
     this.urlCategories.searchParams.set('_sort', 'weight');
     this.urlCategories.searchParams.set('_refs', 'subcategory');
@@ -48,166 +49,163 @@ export default class ProductForm {
     this.subElements['subcategory'].innerHTML = arraySubCategories.join('');
   }
 
-  async loadProductData() { 
-    if (this.productId) { 
-      this.urlProduct = new URL('api/rest/products', BACKEND_URL);
-      this.urlProduct.searchParams.set('id', this.productId);
-    }
+  async loadProductData() {
+    if (!this.productId) return;
+
+    this.urlProduct = new URL('api/rest/products', BACKEND_URL);
+    this.urlProduct.searchParams.set('id', this.productId);
 
     const responseProduct = await fetch(this.urlProduct.toString());
     this.dataProduct = await responseProduct.json();
+
     this.dataProduct = this.dataProduct[0];
 
-    for (const key of Object.keys(this.subElements)) { 
+    for (const key of Object.keys(this.subElements)) {
+      console.log(key);
       this.subElements[key].value = this.dataProduct[key];
-    } 
+    }
+
+    this.imagesProduct = [{
+      source: "317e219831d070101388d6e656e78cec9acce2de0c4940fcd54fbcddc2a6591c.jpg",
+      url: "https://c.dns-shop.ru/thumb/st4/fit/0/0/1bae5dfdfdf19b5ef65b7b57e0a6e7d4/317e219831d070101388d6e656e78cec9acce2de0c4940fcd54fbcddc2a6591c.jpg"
+    }];//this.dataProduct.images;
+
+    const imagesList = this.imagesProduct.map(item => {
+      return `
+        <li class="products-edit__imagelist-item sortable-list__item" style="">
+          <input type="hidden" name="url" value="${item.url}">
+          <input type="hidden" name="source" value="${item.source}">
+          <span>
+            <img src="icon-grab.svg" data-grab-handle="" alt="grab">
+            <img class="sortable-table__cell-img" alt="Image" src="${item.source}">
+            <span>${item.source}</span>
+          </span>
+          <button type="button">
+            <img src="icon-trash.svg" data-delete-handle="" alt="delete">
+          </button>
+        </li>
+      `
+    });
+
+    this.subElements.images.innerHTML = imagesList;
+      
   }
 
-  getTemplate() { 
+  initEventListeners() {
+    this.element.addEventListener('click', this.deleteImage);
+    this.element.addEventListener('click', this.uploadImage);
+  }
+  
+  deleteImage = (evt) => { 
+    const imageDelete = this.element.querySelector('img[data-delete-handle]');
+    if (evt.target === imageDelete) imageDelete.closest('li').remove(); 
+  }
+
+  uploadImage = (evt) => { 
+    const uploadButton = this.element.querySelector('button[name="uploadImage"]');
+    
+    if (evt.target === uploadButton) { 
+      const uploadInput = document.createElement(`input`);
+      uploadInput.type = 'file';
+      uploadInput.hidden = true;
+
+      uploadInput.addEventListener('click', () => {
+        const url = new URL('https://api.imgur.com/3/image')
+        const response = fetch(url);
+        const responseBody = response.json();
+        console.log(responseBody);
+
+      });
+
+      this.element.append(uploadInput);  
+
+      uploadInput.click();
+    }
+  }
+
+  getTemplate() {
     return `
       <div class="product-form">
-      <form data-element="productForm" class="form-grid">
-        ${this.getTitle()}
+                <form data-element="productForm" class="form-grid">
+                  ${this.getTitle()}
         ${this.getDescription()}
         ${this.getPhoto()}
         ${this.getCategories()}
         ${this.getAddCharachters()}
-        <div class="form-buttons">
-          <button type="submit" name="save" class="button-primary-outline">
-            Сохранить товар
+                  <div class="form-buttons">
+                    <button type="submit" name="save" class="button-primary-outline">
+                      Сохранить товар
           </button>
-        </div>
-      </form>
-    </div>
+                  </div>
+                </form>
+              </div>
     `;
   }
 
-  getTitle() { 
+  getTitle() {
     return `
       <div class="form-group form-group__half_left">
-        <fieldset>
-            <label class="form-label">Название товара</label>
-            <input required="" type="text" name="title" class="form-control" placeholder="Название товара">
+                <fieldset>
+                  <label class="form-label">Название товара</label>
+                  <input required="" type="text" name="title" class="form-control" placeholder="Название товара">
         </fieldset>
       </div>
     `;
   }
 
-  getDescription() { 
+  getDescription() {
     return `
       <div class="form-group form-group__wide" >
-        <label class="form-label">Описание</label>
-        <textarea required="" class="form-control" name="description" data-element="productDescription" placeholder="Описание товара"></textarea>
-      </div>
+                  <label class="form-label">Описание</label>
+                  <textarea required="" class="form-control" name="description" data-element="productDescription" placeholder="Описание товара"></textarea>
+                </div>
     `;
   }
 
-  getPhoto() { 
+  getPhoto() {
     return `
       <div class="form-group form-group__wide" data-element="sortable-list-container">
-        <label class="form-label">Фото</label>
-        ${this.getImageListContainer()}
-        <button type="button" name="uploadImage" class="button-primary-outline"><span>Загрузить</span></button>
-     </div>
+                  <label class="form-label">Фото</label>
+                  <div data-element="imageListContainer">
+                    <ul class="sortable-list"></ul>
+                  </div>
+                  <button type="button" name="uploadImage" class="button-primary-outline"><span>Загрузить</span></button>
+                </div>
     `;
   }
 
-  getCategories() { 
+  getCategories() {
     return `
       <div class="form-group form-group__half_left">
-        <label class="form-label">Категория</label>
-        <select class="form-control" name="subcategory"></select>
-      </div>
+                  <label class="form-label">Категория</label>
+                  <select class="form-control" name="subcategory"></select>
+                </div>
     `;
   }
 
-  getAddCharachters() { 
+  getAddCharachters() {
     return `
     <div class="form-group form-group__half_left form-group__two-col">
-      <fieldset>
-        <label class="form-label">Цена ($)</label>
-        <input required="" type="number" name="price" class="form-control" placeholder="100">
+                  <fieldset>
+                    <label class="form-label">Цена ($)</label>
+                    <input required="" type="number" name="price" class="form-control" placeholder="100">
       </fieldset>
-      <fieldset>
-        <label class="form-label">Скидка ($)</label>
-        <input required="" type="number" name="discount" class="form-control" placeholder="0">
+                    <fieldset>
+                      <label class="form-label">Скидка ($)</label>
+                      <input required="" type="number" name="discount" class="form-control" placeholder="0">
       </fieldset>
     </div>
-    <div class="form-group form-group__part-half">
-      <label class="form-label">Количество</label>
-      <input required="" type="number" class="form-control" name="quantity" placeholder="1">
+                    <div class="form-group form-group__part-half">
+                      <label class="form-label">Количество</label>
+                      <input required="" type="number" class="form-control" name="quantity" placeholder="1">
     </div>
-    <div class="form-group form-group__part-half">
-      <label class="form-label">Статус</label>
-      <select class="form-control" name="status">
-        <option value="1">Активен</option>
-        <option value="0">Неактивен</option>
-      </select>
-    </div>
-    `;
-  }
-
-  getImageListContainer() { 
-    return `
-      <div data-element="imageListContainer">
-        <ul class="sortable-list">
-          <li class="products-edit__imagelist-item sortable-list__item" style="">
-            <input type="hidden" name="url" value="https://i.imgur.com/MWorX2R.jpg">
-            <input type="hidden" name="source" value="75462242_3746019958756848_838491213769211904_n.jpg">
-            <span>
-              <img src="icon-grab.svg" data-grab-handle="" alt="grab">
-              <img class="sortable-table__cell-img" alt="Image" src="https://i.imgur.com/MWorX2R.jpg">
-              <span>75462242_3746019958756848_838491213769211904_n.jpg</span>
-            </span>
-            <button type="button">
-              <img src="icon-trash.svg" data-delete-handle="" alt="delete">
-            </button>
-          </li>
-        </ul>
-      </div>
-    `;
-  }
-
-  getSubCategories() { 
-    return `
-      <option value="progulki-i-detskaya-komnata">Детские товары и игрушки &gt; Прогулки и детская комната</option>
-      <option value="kormlenie-i-gigiena">Детские товары и игрушки &gt; Кормление и гигиена</option>
-      <option value="igrushki-i-razvlecheniya">Детские товары и игрушки &gt; Игрушки и развлечения</option>
-      <option value="aktivniy-otdyh-i-ulitsa">Детские товары и игрушки &gt; Активный отдых и улица</option>
-      <option value="radioupravlyaemye-modeli">Детские товары и игрушки &gt; Радиоуправляемые модели</option>
-      <option value="shkolnye-tovary">Детские товары и игрушки &gt; Школьные товары</option>
-      <option value="noutbuki-i-aksessuary">Компьютерная техника &gt; Ноутбуки и аксессуары</option>
-      <option value="monitory">Компьютерная техника &gt; Мониторы</option>
-      <option value="komplektuyuschie">Компьютерная техника &gt; Комплектующие</option>
-      <option value="setevoe-oborudovanie">Компьютерная техника &gt; Сетевое оборудование</option>
-      <option value="vstraivaemaya-tehnika">Крупная бытовая техника &gt; Встраиваемая техника</option>
-      <option value="stiralnye-mashiny">Крупная бытовая техника &gt; Стиральные машины</option>
-      <option value="sushilnye-mashiny">Крупная бытовая техника &gt; Сушильные машины</option>
-      <option value="holodilniki">Крупная бытовая техника &gt; Холодильники</option>
-      <option value="morozilnye-kamery">Крупная бытовая техника &gt; Морозильные камеры</option>
-      <option value="vinnye-shkafy">Крупная бытовая техника &gt; Винные шкафы</option>
-      <option value="vytyazhki">Крупная бытовая техника &gt; Вытяжки</option>
-      <option value="plity">Крупная бытовая техника &gt; Плиты</option>
-      <option value="posudomoechnye-mashiny">Крупная бытовая техника &gt; Посудомоечные машины</option>
-      <option value="melkaya-bytovaya-tehnika">Крупная бытовая техника &gt; Мелкая бытовая техника</option>
-      <option value="mikrovolnovye-pechi">Крупная бытовая техника &gt; Микроволновые печи</option>
-      <option value="elektroduhovki">Крупная бытовая техника &gt; Электродуховки</option>
-      <option value="uborochnye-mashiny">Крупная бытовая техника &gt; Уборочные машины</option>
-      <option value="paroochistiteli">Крупная бытовая техника &gt; Пароочистители</option>
-      <option value="kulery-i-purifayery">Крупная бытовая техника &gt; Кулеры и пурифайеры</option>
-      <option value="kuhnya">Мелкая бытовая техника &gt; Кухня</option>
-      <option value="bytovye-pribory-dlya-doma">Мелкая бытовая техника &gt; Бытовые приборы для дома</option>
-      <option value="krasota-i-gigiena">Мелкая бытовая техника &gt; Красота и гигиена</option>
-      <option value="lcd-televizory">ТВ и видеотехника &gt; LCD телевизоры</option>
-      <option value="podstavki-i-krepleniya">ТВ и видеотехника &gt; Подставки и крепления</option>
-      <option value="mediapleery">ТВ и видеотехника &gt; Медиаплееры</option>
-      <option value="tv-tyunery">ТВ и видеотехника &gt; ТВ тюнеры</option>
-      <option value="tv-antenny">ТВ и видеотехника &gt; ТВ антенны</option>
-      <option value="3d-ochki">ТВ и видеотехника &gt; 3D очки</option>
-      <option value="ochki-virtualnoy-realnosti">ТВ и видеотехника &gt; Очки виртуальной реальности</option>
-      <option value="proektsionnoe-oborudovanie">ТВ и видеотехника &gt; Проекционное оборудование</option>
-      <option value="videokamery-i-aksessuary">ТВ и видеотехника &gt; Видеокамеры и аксессуары</option>
-      <option value="dvd/blu-ray-pleery">ТВ и видеотехника &gt; DVD/Blu-ray плееры</option>
+                      <div class="form-group form-group__part-half">
+                        <label class="form-label">Статус</label>
+                        <select class="form-control" name="status">
+                          <option value="1">Активен</option>
+                          <option value="0">Неактивен</option>
+                        </select>
+                      </div>
     `;
   }
 }
