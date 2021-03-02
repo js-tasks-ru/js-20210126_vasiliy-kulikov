@@ -98,8 +98,29 @@ export default class ProductForm {
 
   submitForm = async (evt) => { 
     evt.preventDefault();
-    const form = new FormData(this.subElements.productForm);
-    console.dir(form);
+    const formValues = {};
+
+    if (this.productId) formValues.id = this.productId;
+
+    const formControls = this.subElements.productForm.querySelectorAll('.form-control');
+
+    for (const item of formControls) {
+      if (parseInt(item.value) || item.value === '0') {
+        formValues[item.id] = parseInt(item.value);
+      } else { 
+        formValues[item.id] = item.value;
+      }
+    }
+
+    const imagesList = this.subElements.imageListContainer.querySelectorAll('li');
+    const images = [...imagesList].map(item => {
+      return {
+        source: item.querySelector('input[name="source"]').value,
+        url: item.querySelector('input[name="url"]').value
+      };
+    });
+    
+    formValues.images = images;
     
     try {
       const response = await fetch('https://course-js.javascript.ru/api/rest/products', {
@@ -107,10 +128,10 @@ export default class ProductForm {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(form)
+      body: JSON.stringify(formValues)
     });
 
-      const result = await response;
+      const result = await response.json();
       console.log(result);
     } catch (err) {
       console.log('Ошибка ', err);
