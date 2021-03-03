@@ -33,6 +33,7 @@ describe('forms-fetch-api-part-2/product-form-v1', () => {
 
   it('should render categories data correctly', () => {
     const subcategory = productFormComponent.element.querySelector('#subcategory');
+
     function prepareCategoryName () {
       const names = [];
 
@@ -93,7 +94,6 @@ describe('forms-fetch-api-part-2/product-form-v1', () => {
 
   it('should dispatch "product-updated" event after product creating', async () => {
     const spyDispatchEvent = jest.spyOn(productFormComponent.element, 'dispatchEvent');
-    
 
     fetchMock
       .once(JSON.stringify({status: 'ok'}));
