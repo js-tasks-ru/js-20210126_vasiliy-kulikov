@@ -71,7 +71,7 @@ export default class DoubleSlider {
     };
 
     initSliderLine() { 
-        let { width, left, right } = this.sliderLine.getBoundingClientRect();
+        const { width, left, right } = this.sliderLine.getBoundingClientRect();
 
         this.sliderLine.width = width;
         this.sliderLine.leftX = left;
