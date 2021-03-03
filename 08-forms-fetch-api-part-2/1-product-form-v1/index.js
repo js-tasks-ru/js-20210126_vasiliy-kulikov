@@ -73,72 +73,12 @@ export default class ProductForm {
     this.subElements.imageListContainer.innerHTML = `<ul class="sortable-list">${imagesList.join('')}</ul>`;
   }
 
-  getImageTemplate(url, source) { 
-    return `
-      <li class="products-edit__imagelist-item sortable-list__item" style="">
-        <input type="hidden" name="url" value="${url}">
-        <input type="hidden" name="source" value="${source}">
-        <span>
-          <img src="icon-grab.svg" data-grab-handle="" alt="grab">
-          <img class="sortable-table__cell-img" alt="Image" src="${url}">
-          <span>${source}</span>
-        </span>
-        <button type="button">
-          <img src="icon-trash.svg" data-delete-handle="" alt="delete">
-        </button>
-      </li>
-    `
-  }
-
   initEventListeners() {
     this.subElements.productForm.addEventListener('pointerdown', this.deleteImage);
     this.subElements.productForm.addEventListener('pointerdown', this.uploadImage);
     this.subElements.productForm.addEventListener('submit', this.submitForm);
   }
 
-  submitForm = async (evt) => { 
-    evt.preventDefault();
-    const formValues = {};
-
-    if (this.productId) formValues.id = this.productId;
-
-    const formControls = this.subElements.productForm.querySelectorAll('.form-control');
-
-    for (const item of formControls) {
-      if (parseInt(item.value) || item.value === '0') {
-        formValues[item.id] = parseInt(item.value);
-      } else { 
-        formValues[item.id] = item.value;
-      }
-    }
-
-    const imagesList = this.subElements.imageListContainer.querySelectorAll('li');
-    const images = [...imagesList].map(item => {
-      return {
-        source: item.querySelector('input[name="source"]').value,
-        url: item.querySelector('input[name="url"]').value
-      };
-    });
-    
-    formValues.images = images;
-    
-    try {
-      const response = await fetch('https://course-js.javascript.ru/api/rest/products', {
-      method: (this.productId) ? 'PATCH' : 'PUT',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(formValues)
-    });
-
-      const result = await response.json();
-      console.log(result);
-    } catch (err) {
-      console.log('Ошибка ', err);
-    }
-    
-  }
-  
   deleteImage = (evt) => { 
     const imagesDelete = this.element.querySelectorAll('img[data-delete-handle]');
     if ([...imagesDelete].includes(evt.target)) evt.target.closest('li').remove();
@@ -188,6 +128,61 @@ export default class ProductForm {
     const result = await response.json();
     
     return result;
+  }
+
+  submitForm = async (evt) => { 
+    evt.preventDefault();
+    const formValues = {};
+
+    if (this.productId) formValues.id = this.productId;
+
+    const formControls = this.subElements.productForm.querySelectorAll('.form-control');
+
+    for (const item of formControls) {
+      if (parseInt(item.value) || item.value === '0') {
+        formValues[item.id] = parseInt(item.value);
+      } else { 
+        formValues[item.id] = item.value;
+      }
+    }
+
+    const imagesList = this.subElements.imageListContainer.querySelectorAll('li');
+
+    const images = [...imagesList].map(item => {
+      return {
+        source: item.querySelector('input[name="source"]').value,
+        url: item.querySelector('input[name="url"]').value
+      };
+    });
+    
+    formValues.images = images;
+    
+    try {
+      const response = await fetch('https://course-js.javascript.ru/api/rest/products', {
+      method: (this.productId) ? 'PATCH' : 'PUT',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formValues)
+      });
+
+      const result = await response.json();
+      console.log(result);
+
+      await this.save();
+
+    } catch (err) {
+      console.log('Ошибка ', err);
+    }
+  }
+  
+  async save() { 
+    const productUpdate = new CustomEvent('product-updated', { bubbles: true });
+    const productSaved = new CustomEvent('product-saved', { bubbles: true });
+
+    this.productId
+      ? this.element.dispatchEvent(productUpdate)
+      : this.element.dispatchEvent(productSaved);
   }
 
   getTemplate() {
@@ -274,6 +269,23 @@ export default class ProductForm {
       </select>
     </div>
     `;
+  }
+
+  getImageTemplate(url, source) { 
+    return `
+      <li class="products-edit__imagelist-item sortable-list__item" style="">
+        <input type="hidden" name="url" value="${url}">
+        <input type="hidden" name="source" value="${source}">
+        <span>
+          <img src="icon-grab.svg" data-grab-handle="" alt="grab">
+          <img class="sortable-table__cell-img" alt="Image" src="${url}">
+          <span>${source}</span>
+        </span>
+        <button type="button">
+          <img src="icon-trash.svg" data-delete-handle="" alt="delete">
+        </button>
+      </li>
+    `
   }
 
   remove() { 
