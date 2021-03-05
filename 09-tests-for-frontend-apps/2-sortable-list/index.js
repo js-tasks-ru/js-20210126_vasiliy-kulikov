@@ -17,6 +17,8 @@ export default class SortableList {
         this.element = wrapper;
         wrapper.remove();
 
+        
+
         this.initEventListeners();
     }
 
@@ -31,11 +33,13 @@ export default class SortableList {
 
     pointerdown = (evt) => { 
         if (!evt.target.hasAttribute('data-grab-handle')) return;
+
+        this.subElements = this.element.querySelectorAll('li');
         
         evt.target.classList.add('sortable-list__item_dragging');
 
-        const { height, left, top, right } = evt.target.getBoundingClientRect();
-        const { width } = evt.target.closest('ul').getBoundingClientRect();
+        const { height, left, top } = evt.target.getBoundingClientRect();
+        const { width } = this.element.getBoundingClientRect();
 
         evt.target.style.cssText = `
             width: ${width}px;
@@ -44,32 +48,80 @@ export default class SortableList {
             top: ${top}px
         `;
 
+        this.notActiveElements = [];
+
+        [...this.subElements].forEach(item => {
+            if (item !== evt.target) this.notActiveElements.push(item); 
+        });
+
         this.activeElement = evt.target;
+
+        this.placeHolder = document.createElement('div');
+        this.placeHolder.className = 'sortable-list__placeholder';
+        this.placeHolder.style.cssText = `
+            width: ${width}px;
+            height: ${height}px
+        `;
+
+        this.activeElement.replaceWith(this.placeHolder);
+        this.element.append(this.activeElement);
 
         this.shiftX = evt.clientX - left;
         this.shiftY = evt.clientY - top;
+
+        this.startY = evt.clientY;
         
         document.addEventListener('pointermove', this.pointermove);
         document.addEventListener('pointerdown', this.pointerup);
     }
 
     pointermove = (evt) => { 
+
+        let direction;
         
+        (this.startY - evt.clientY) > 0 ? direction = 'down' : direction = 'up';
 
-        this.activeElement.style.top = evt.clientY - this.shiftY + 'px';
-        this.activeElement.style.left = evt.clientX - this.shiftX + 'px';
+        const left = evt.clientX - this.shiftX;
+        const top = evt.clientY - this.shiftY;
 
-        this.activeElement.hidden = true;
-        let elemBelow = document.elementFromPoint(evt.clientX, evt.clientY);
-        console.log(this.activeElement.hasAttribute('hidden'));
-        console.log(elemBelow);
-        this.activeElement.hidden = false;
+        this.activeElement.style.display = 'none';
+        const elemBelow = document.elementFromPoint(evt.clientX, top);
+        this.activeElement.style.display = "";
 
-        console.log(this.activeElement.hasAttribute('hidden'));
+        if ([...this.subElements].includes(elemBelow)) { 
+            direction >= 0 ? elemBelow.before(this.placeHolder) : elemBelow.after(this.placeHolder);
+        }
+
+        // this.startIndex = [...this.subElements].indexOf(this.activeElement);
+
+        // this.subElements.coordsTop.forEach(item => { 
+        //     if (top - 20 < item) 
+        // })
+
+        // for (let i = 0; i < this.startIndex; i++) { 
+        //     if (top - 20 < this.subElements.coordsTop[i]) { 
+        //         this.subElements[i].before(this.placeHolder);
+        //         this.startIndex = i;
+        //     }
+        // }
+
+        // const startIndex = [...this.subElements].indexOf(this.activeElement);
+
+        // const arrayFilter = []; 
+
+        // for (const element of this.subElements) { 
+        //     if ((top - 20) < element.top) {
+        //         arrayFilter.push(element);
+        //         const topElement = arrayFilter[arrayFilter.length - 1];
+        //         topElement.before(this.placeHolder);
+        //     }
+        // }
+
+        // console.log(arrayFilter);
+
+        this.activeElement.style.top = top + 'px';
+        this.activeElement.style.left = left + 'px';
         
-
-        
-
-        
+        this.startY = evt.clientY;
     }
 }
