@@ -34,9 +34,9 @@ export default class SortableList {
         
         evt.target.classList.add('sortable-list__item_dragging');
 
-        const { width, height, left, top } = evt.target.getBoundingClientRect();
-        console.log(evt.target.getBoundingClientRect());
-       
+        const { height, left, top, right } = evt.target.getBoundingClientRect();
+        const { width } = evt.target.closest('ul').getBoundingClientRect();
+
         evt.target.style.cssText = `
             width: ${width}px;
             height: ${height}px;
@@ -50,11 +50,26 @@ export default class SortableList {
         this.shiftY = evt.clientY - top;
         
         document.addEventListener('pointermove', this.pointermove);
-        document.addEventListener('pointerdown', this.pointerdown);
+        document.addEventListener('pointerdown', this.pointerup);
     }
 
     pointermove = (evt) => { 
+        
+
         this.activeElement.style.top = evt.clientY - this.shiftY + 'px';
         this.activeElement.style.left = evt.clientX - this.shiftX + 'px';
+
+        this.activeElement.hidden = true;
+        let elemBelow = document.elementFromPoint(evt.clientX, evt.clientY);
+        console.log(this.activeElement.hasAttribute('hidden'));
+        console.log(elemBelow);
+        this.activeElement.hidden = false;
+
+        console.log(this.activeElement.hasAttribute('hidden'));
+        
+
+        
+
+        
     }
 }
