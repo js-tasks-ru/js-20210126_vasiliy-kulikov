@@ -48,6 +48,8 @@ export default class SortableList {
             top: ${top}px
         `;
 
+        this.height = height;
+
         this.notActiveElements = [];
 
         [...this.subElements].forEach(item => {
@@ -72,56 +74,50 @@ export default class SortableList {
         this.startY = evt.clientY;
         
         document.addEventListener('pointermove', this.pointermove);
-        document.addEventListener('pointerdown', this.pointerup);
+        document.addEventListener('pointerup', this.pointerup);
     }
 
     pointermove = (evt) => { 
 
         let direction;
         
-        (this.startY - evt.clientY) > 0 ? direction = 'down' : direction = 'up';
+        (this.startY - evt.clientY) > 0 ? direction = 'up' : direction = 'down';
+
+        console.log(direction);
 
         const left = evt.clientX - this.shiftX;
+        const bottom = evt.clientY - this.shiftY + this.height;
         const top = evt.clientY - this.shiftY;
 
-        this.activeElement.style.display = 'none';
-        const elemBelow = document.elementFromPoint(evt.clientX, top);
-        this.activeElement.style.display = "";
+        let elemBelow;
 
-        if ([...this.subElements].includes(elemBelow)) { 
-            direction >= 0 ? elemBelow.before(this.placeHolder) : elemBelow.after(this.placeHolder);
+        switch (direction) {
+            case 'down':
+                this.activeElement.style.display = 'none';
+                elemBelow = document.elementFromPoint(evt.clientX, bottom);
+                this.activeElement.style.display = "";
+
+                if ([...this.subElements].includes(elemBelow)) elemBelow.after(this.placeHolder);
+
+                break;
+            
+            case 'up':
+                this.activeElement.style.display = 'none';
+                elemBelow = document.elementFromPoint(evt.clientX, top);
+                this.activeElement.style.display = "";
+
+                if ([...this.subElements].includes(elemBelow)) elemBelow.before(this.placeHolder);
+                
+                break;
         }
-
-        // this.startIndex = [...this.subElements].indexOf(this.activeElement);
-
-        // this.subElements.coordsTop.forEach(item => { 
-        //     if (top - 20 < item) 
-        // })
-
-        // for (let i = 0; i < this.startIndex; i++) { 
-        //     if (top - 20 < this.subElements.coordsTop[i]) { 
-        //         this.subElements[i].before(this.placeHolder);
-        //         this.startIndex = i;
-        //     }
-        // }
-
-        // const startIndex = [...this.subElements].indexOf(this.activeElement);
-
-        // const arrayFilter = []; 
-
-        // for (const element of this.subElements) { 
-        //     if ((top - 20) < element.top) {
-        //         arrayFilter.push(element);
-        //         const topElement = arrayFilter[arrayFilter.length - 1];
-        //         topElement.before(this.placeHolder);
-        //     }
-        // }
-
-        // console.log(arrayFilter);
-
+        
         this.activeElement.style.top = top + 'px';
         this.activeElement.style.left = left + 'px';
         
         this.startY = evt.clientY;
+    }
+
+    pointerup() {
+        this.placeHolder.replaceWith(this.activeElement);
     }
 }
