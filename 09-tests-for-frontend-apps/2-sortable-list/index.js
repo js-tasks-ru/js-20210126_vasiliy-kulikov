@@ -133,9 +133,13 @@ export default class SortableList {
 
     destroy() {
         this.remove();
+        document.removeEventListener('pointerdown', this.delete);
+        document.removeEventListener('pointerdown', this.pointerdown);
     }
 
     remove() {
-        this.element.remove(); 
+        this.element.remove();
+        document.removeEventListener('pointerdown', this.delete);
+        document.removeEventListener('pointerdown', this.pointerdown);
     }
 }
