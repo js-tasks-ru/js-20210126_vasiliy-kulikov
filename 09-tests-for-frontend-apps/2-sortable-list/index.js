@@ -9,7 +9,7 @@ export default class SortableList {
         wrapper.className = 'sortable-list';
 
         this.items.forEach(item => {
-            item.className = 'categories__sortable-list-item sortable-list__item';
+            item.classList.add('sortable-list__item');
             item.setAttribute('data-grab-handle', '');
             wrapper.append(item);
         });
@@ -35,10 +35,15 @@ export default class SortableList {
         this.initActiveElement(evt.target);
         this.initNotActiveElements();
         this.initPlaceHolder();
+        
 
         this.shiftX = evt.clientX - this.left;
         this.shiftY = evt.clientY - this.top;
         this.startY = evt.clientY;
+        console.log('ul top: ', this.activeElement.closest('ul').getBoundingClientRect());
+        console.log('this.activeElement top: ', this.activeElement, this.activeElement.getBoundingClientRect());
+        console.log('evt.clientY:', evt.clientY);
+        console.log('this.shiftY:', this.shiftY);
 
         this.activeElement.replaceWith(this.placeHolder);
         this.element.append(this.activeElement);
