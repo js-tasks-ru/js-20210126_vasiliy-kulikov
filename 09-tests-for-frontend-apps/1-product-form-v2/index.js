@@ -88,13 +88,6 @@ export default class ProductForm {
       })
     });
 
-    // const imagesList = imagesProduct.map(item => {
-    //   return this.getImageTemplate(item.url, item.source);
-    // });
-    // console.log(this.subElements.imageListContainer);
-    // console.log(imagesList);
-
-    // this.subElements.imageListContainer.innerHTML = `<ul class="sortable-list">${imagesList.join('')}</ul>`;
     this.subElements.imageListContainer.append(sortableList.element);
   }
 
@@ -294,23 +287,6 @@ export default class ProductForm {
     </div>
     `;
   }
-
-  // getImageTemplate(url, source) { 
-  //   return `
-  //     <li class="products-edit__imagelist-item sortable-list__item" style="">
-  //       <input type="hidden" name="url" value="${url}">
-  //       <input type="hidden" name="source" value="${source}">
-  //       <span>
-  //         <img src="icon-grab.svg" data-grab-handle="" alt="grab">
-  //         <img class="sortable-table__cell-img" alt="Image" src="${url}">
-  //         <span>${source}</span>
-  //       </span>
-  //       <button type="button">
-  //         <img src="icon-trash.svg" data-delete-handle="" alt="delete">
-  //       </button>
-  //     </li>
-  //   `
-  // }
 
   remove() { 
     this.element.remove();

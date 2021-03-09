@@ -2,6 +2,7 @@ export default class SortableList {
     constructor(source = {}) { 
         this.items = source.items;
         this.render();
+        this.initEventListeners();
     }
 
     render() { 
@@ -17,7 +18,7 @@ export default class SortableList {
         this.element = wrapper;
         wrapper.remove();
 
-        this.initEventListeners();
+        
     }
 
     initEventListeners() { 
@@ -40,10 +41,6 @@ export default class SortableList {
         this.shiftX = evt.clientX - this.left;
         this.shiftY = evt.clientY - this.top;
         this.startY = evt.clientY;
-        console.log('ul top: ', this.activeElement.closest('ul').getBoundingClientRect());
-        console.log('this.activeElement top: ', this.activeElement, this.activeElement.getBoundingClientRect());
-        console.log('evt.clientY:', evt.clientY);
-        console.log('this.shiftY:', this.shiftY);
 
         this.activeElement.replaceWith(this.placeHolder);
         this.element.append(this.activeElement);
@@ -53,33 +50,29 @@ export default class SortableList {
     }
 
     pointermove = (evt) => { 
-
-        let direction;
         
-        (this.startY - evt.clientY) > 0 ? direction = 'up' : direction = 'down';
+        (this.startY - evt.clientY) > 0 ? this.direction = 'up' : this.direction = 'down';
 
         const left = evt.clientX - this.shiftX;
         const bottom = evt.clientY - this.shiftY + this.height;
         const top = evt.clientY - this.shiftY;
 
-        let elemBelow;
-
-        switch (direction) {
+        switch (this.direction) {
             case 'down': 
                 this.activeElement.style.display = 'none';
-                elemBelow = document.elementFromPoint(evt.clientX, bottom);
+                this.elemBelow = document.elementFromPoint(evt.clientX, bottom);
                 this.activeElement.style.display = "";
 
-                if ([...this.items].includes(elemBelow)) elemBelow.after(this.placeHolder);
+                if ([...this.items].includes(this.elemBelow)) this.elemBelow.after(this.placeHolder);
 
                 break;
             
             case 'up':
                 this.activeElement.style.display = 'none';
-                elemBelow = document.elementFromPoint(evt.clientX, top);
+                this.elemBelow = document.elementFromPoint(evt.clientX, top);
                 this.activeElement.style.display = "";
 
-                if ([...this.items].includes(elemBelow)) elemBelow.before(this.placeHolder);
+                if ([...this.items].includes(this.elemBelow)) this.elemBelow.before(this.placeHolder);
                 
                 break;
         }
@@ -101,10 +94,11 @@ export default class SortableList {
 
     initActiveElement(target) {
         this.activeElement = target.closest('li');
-        this.activeElement.classList.add('sortable-list__item_dragging');
 
         const { height, left, top } = this.activeElement.getBoundingClientRect();
         const { width } = this.element.getBoundingClientRect();
+
+        this.activeElement.classList.add('sortable-list__item_dragging');
 
         this.activeElement.style.cssText = `
             width: ${width}px;
