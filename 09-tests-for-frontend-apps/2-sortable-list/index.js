@@ -44,6 +44,8 @@ export default class SortableList {
 
         this.activeElement.replaceWith(this.placeHolder);
         this.element.append(this.activeElement);
+
+        this.activeElement.ondragstart = () => false;
         
         document.addEventListener('pointerup', this.pointerup);
         document.addEventListener('pointermove', this.pointermove);
