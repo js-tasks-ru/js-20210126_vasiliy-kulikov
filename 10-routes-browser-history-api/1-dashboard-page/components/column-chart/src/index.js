@@ -33,6 +33,7 @@ export default class ColumnChart {
     element.innerHTML = this.template;
 
     this.element = element.firstElementChild;
+    this.element.classList.add(`dashboard__chart_${this.label}`);
     this.subElements = this.getSubElements(this.element);
 
     this.loadData(from, to);
