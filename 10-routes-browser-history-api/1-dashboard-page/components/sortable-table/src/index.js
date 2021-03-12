@@ -65,10 +65,11 @@ export default class SortableTable {
       id: headersConfig.find(item => item.sortable).id,
       order: 'asc'
     },
-    isSortLocally = false,
+    isSortLocally = true,
     step = 20,
     start = 1,
-    end = start + step
+    end = start + step,
+    range = {}
   } = {}) {
 
     this.headersConfig = headersConfig;
@@ -78,12 +79,14 @@ export default class SortableTable {
     this.step = step;
     this.start = start;
     this.end = end;
+    this.from = range.from;
+    this.to = range.to
 
     this.render();
   }
 
   async render() {
-    const {id, order} = this.sorted;
+    const { id, order } = this.sorted;
     const wrapper = document.createElement('div');
 
     wrapper.innerHTML = this.getTable();
@@ -99,7 +102,9 @@ export default class SortableTable {
     this.initEventListeners();
   }
 
-  async loadData(id, order, start = this.start, end = this.end) {
+  async loadData(id, order, start = this.start, end = this.end, from = this.from, to = this.to) {
+    this.url.searchParams.set('from', from.toISOString());
+    this.url.searchParams.set('to', to.toISOString());
     this.url.searchParams.set('_sort', id);
     this.url.searchParams.set('_order', order);
     this.url.searchParams.set('_start', start);
@@ -127,6 +132,12 @@ export default class SortableTable {
     rows.innerHTML = this.getTableRows(data);
 
     this.subElements.body.append(...rows.childNodes);
+  }
+
+  updateData = async (from, to) => {
+    const newData = await this.loadData(this.sorted.id, this.sorted.order, this.start, this.end, from, to);
+    const newRows = this.getTableRows(newData);
+    this.subElements.body.innerHTML = newRows;
   }
 
   getTableHeader() {
