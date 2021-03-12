@@ -28,13 +28,13 @@ export default class Page {
 
         this.element = wrapper;
 
-        // this.subElements = {
-        //     rangePicker: rangePicker.element,
-        //     sortableTable: sortableTable.element,
-        //     ordersChart: chartOrders.element,
-        //     customersChart: chartCustomers.element,
-        //     salesChart: chartSales.element 
-        // }
+        this.subElements = {
+            rangePicker: this.rangePicker.element,
+            sortableTable: this.sortableTable.element,
+            ordersChart: this.chartOrders.element,
+            customersChart: this.chartCustomers.element,
+            salesChart: this.chartSales.element 
+        }
 
         wrapper.remove();
 
@@ -61,7 +61,11 @@ export default class Page {
         });
         
         this.sortableTable = new SortableTable(header, {
-            url: `api/dashboard/bestsellers?from=${this.dates.from.toISOString()}&to=${this.dates.to.toISOString()}`
+            url: `api/dashboard/bestsellers`,
+            range: {
+                from: this.dates.from,
+                to: this.dates.to,
+            }
         });
 
         this.chartOrders = new ColumnChart({
@@ -103,8 +107,7 @@ export default class Page {
             await this.chartCustomers.update(this.dates.from, this.dates.to);
             await this.chartSales.update(this.dates.from, this.dates.to);
 
-            this.sortableTable.url = new URL(`api/dashboard/bestsellers?from=${this.dates.from.toISOString()}&to=${this.dates.to.toISOString()}`, BACKEND_URL);
-            console.log(this.sortableTable);
+            this.sortableTable.updateData(this.dates.from, this.dates.to);
         });
     }
 
